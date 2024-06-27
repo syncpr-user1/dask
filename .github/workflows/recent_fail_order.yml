@@ -84,8 +84,8 @@ jobs:
       - name: Install
         run: source continuous_integration/scripts/install.sh
       
-      - name: Install pytest-ranking
-        run: pip install pytest-ranking
+      - name: Install pytest-ranking related
+        run: pip install pytest-ranking pytest-json-report
 
       - name: Restore pytest-ranking cache
         id: restore-pytest-ranking-cache
@@ -108,8 +108,8 @@ jobs:
               export XTRATESTARGS="--cov=dask --cov-report=xml --junit-xml pytest.xml $XTRATESTARGS"
           fi
 
-          echo "pytest -v --durations=0 dask --runslow $XTRATESTARGS --rank --rank-weight=0-1-0"
-          pytest -v --durations=0 dask --runslow $XTRATESTARGS --rank --rank-weight=0-1-0
+          echo "pytest -v --durations=0 --json-report --json-report-file=./test-report.json dask --runslow $XTRATESTARGS --rank --rank-weight=0-1-0"
+          pytest -v --durations=0 --json-report --json-report-file=./test-report.json dask --runslow $XTRATESTARGS --rank --rank-weight=0-1-0
 
           set +e
       
@@ -120,7 +120,12 @@ jobs:
         with:
           path: ${{ github.workspace }}/.pytest_cache/v/pytest_ranking_data
           key: pytest-ranking-cache-${{ github.workflow }}-${{ runner.os }}-${{ matrix.python }}-${{ github.run_id }}
-
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+            name: pytest-ranking upload test report json
+            path: |
+              ./test-report.json
       # - name: Coverage
       #   uses: codecov/codecov-action@v3
 
